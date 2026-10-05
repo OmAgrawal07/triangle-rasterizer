@@ -63,8 +63,8 @@ module raster_top (
   // TODO(Om): convert {pix_x, pix_y} to Q-format centers (x+0.5, y+0.5)
   //           using FRAC_BITS / HALF_PIXEL from pkg_raster_params — match rules sheet.
   logic signed [COORD_WIDTH-1:0] px_q, py_q;
-  assign px_q = HALF_PIXEL;
-  assign py_q = HALF_PIXEL;
+  assign px_q = (pix_x << FRAC_BITS) + HALF_PIXEL;
+  assign py_q = (pix_y << FRAC_BITS) + HALF_PIXEL;
 
   logic signed [2*COORD_WIDTH:0] e0, e1, e2;
 
