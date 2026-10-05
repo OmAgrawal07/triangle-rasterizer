@@ -1,6 +1,5 @@
 // pixel_scanner.sv — Phase 0 FSM shell only.
-// TODO(Om): implement real transitions and pixel walk. Named states only for now.
-// Owner: Om. Assistant must not fill the scan algorithm.
+// Owner: Om.
 // Note: is_inside — "inside" is a SystemVerilog keyword.
 
 module pixel_scanner (
@@ -24,6 +23,9 @@ module pixel_scanner (
   output logic [pkg_raster_params::COLOR_WIDTH-1:0]         fb_wdata
 );
 
+  // Creating a Moore FSM for the pixel scanner (outputs depend strictly on state)
+  // One output (fb_we) depends on input is_inside, following Mealy FSM convention
+
   import pkg_raster_params::*;
   
   typedef enum logic [2:0] {
@@ -35,17 +37,11 @@ module pixel_scanner (
     S_DONE  = 3'd5
   } state_e;
 
-  // Kept for Om's Phase 1 FSM — unused in Phase 0 stub body.
   /* verilator lint_off UNUSEDSIGNAL */
   state_e state;
   state_e nextState;
   /* verilator lint_on UNUSEDSIGNAL */
 
-  // TODO(Om): always_ff state register with reset → S_IDLE.
-  // TODO(Om): always_comb next-state: IDLE --start--> CLEAR/LOAD → SCAN → DONE → IDLE.
-  // TODO(Om): Advance x,y across the frame (or bbox); assert fb_we when is_inside.
-  // TODO(Om): addr = y * WIDTH + x; pack color per rules sheet.
-  // TODO(Om): Pulse done for one cycle; hold busy while not idle.
   // No real transitions in Phase 0 — stay idle so smoke TB only checks clk/rst.
 
   always_ff @(posedge clk, negedge rst_n)
@@ -81,9 +77,9 @@ module pixel_scanner (
 
   always_comb begin
     unique case (state)
-      S_IDLE: nextState = start ? S_CLEAR : S_IDLE;
-      S_CLEAR: nextState = (clear_addr == FB_DEPTH-1) ? S_SCAN : S_CLEAR;
-      S_SCAN: nextState = (scan_done) ? S_DONE : S_SCAN;
+      S_IDLE: nextState = state_e'(start ? S_CLEAR : S_IDLE);
+      S_CLEAR: nextState = state_e'(clear_addr == FB_DEPTH-1 ? S_SCAN : S_CLEAR);
+      S_SCAN: nextState = state_e'(scan_done ? S_DONE : S_SCAN);
       S_DONE: nextState = S_IDLE;
       default: nextState = S_IDLE;
     endcase
