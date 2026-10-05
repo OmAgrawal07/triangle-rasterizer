@@ -86,7 +86,8 @@ module pixel_scanner (
 
   always_comb begin
     unique case (state)
-      S_IDLE: nextState = state_e'(start ? S_CLEAR : S_IDLE);
+      S_IDLE: nextState = state_e'(!start ? S_IDLE : 
+                                  do_clear ? S_CLEAR : S_SCAN);
       S_CLEAR: nextState = state_e'(clear_addr == FB_DEPTH-1 ? S_SCAN : S_CLEAR);
       S_SCAN: nextState = state_e'(scan_done ? S_DONE : S_SCAN);
       S_DONE: nextState = S_IDLE;

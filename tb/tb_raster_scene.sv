@@ -50,10 +50,19 @@ module tb_raster_scene;
     frame_start = 1'b1;
     @(posedge clk);
     frame_start = 1'b0;
-
-    // Stub controller never asserts frame_done — Phase 2 elaborate smoke only.
-    repeat (20) @(posedge clk);
-    $display("tb_raster_scene: ELAB_OK (implement controller/ROM, then wait frame_done + dump)");
+    wait (frame_done);
+    @(posedge clk);
+    // optional spot-check an overlap pixel, then full dump:
+    dump_fd = $fopen("sim/out/scene.rgb", "wb");
+    for (pix_i = 0; pix_i < FB_DEPTH; pix_i++) begin
+      fb_raddr = FB_ADDR_WIDTH'(pix_i);
+      @(posedge clk); @(posedge clk);
+      $fwrite(dump_fd, "%c", fb_rdata[23:16]);
+      $fwrite(dump_fd, "%c", fb_rdata[15:8]);
+      $fwrite(dump_fd, "%c", fb_rdata[7:0]);
+    end
+    $fclose(dump_fd);
+    $display("tb_raster_scene: wrote sim/out/scene.rgb");
     $finish;
   end
 

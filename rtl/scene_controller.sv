@@ -45,16 +45,35 @@ module scene_controller (
   // TODO(Om): frame_busy = (state != F_IDLE)
   // TODO(Om): Do NOT clear between triangles — only before the first scan.
 
-  assign state       = F_IDLE;
-  assign next_state  = F_IDLE;
-  assign tri_idx     = '0;
-  assign tri_load    = 1'b0;
-  assign scan_start  = 1'b0;
-  assign do_clear    = 1'b0;
-  assign frame_busy  = 1'b0;
-  assign frame_done  = 1'b0;
+  always_ff @(posedge clk, negedge rst_n)
+    if (~rst_n) begin
+      state    <= F_IDLE;
+      tri_idx  <= '0;
+    end
+    else begin
+      state    <= next_state;
+      if (state == F_IDLE)
+        tri_idx <= '0;
+      else if (state == F_NEXT)
+        tri_idx <= tri_idx + 1'b1;
+    end
 
-  logic unused;
-  assign unused = clk ^ rst_n ^ frame_start ^ scan_busy ^ scan_done;
+  always_comb begin
+    unique case (state)
+      F_IDLE: next_state = frame_state_e'(frame_start ? F_LOAD : F_IDLE);
+      F_LOAD: next_state = F_SCAN;
+      F_SCAN: next_state = F_CLEAR;
+      F_CLEAR: next_state = frame_state_e'(scan_done ? F_NEXT : F_CLEAR);
+      F_NEXT: next_state = frame_state_e'((tri_idx == NUM_TRIANGLES-1) ? F_DONE : F_LOAD);
+      F_DONE: next_state = F_IDLE;
+      default: next_state = F_IDLE;
+    endcase
+  end
+
+  assign frame_busy  = (state != F_IDLE);
+  assign frame_done  = (state == F_DONE);
+  assign tri_load    = (state == F_LOAD);
+  assign scan_start  = (state == F_SCAN);
+  assign do_clear    = (tri_idx == '0);
 
 endmodule
