@@ -1,5 +1,4 @@
 // triangle_regs.sv — Phase 0 shell only.
-// TODO(Om): hold V0,V1,V2 + color for the current triangle.
 // Owner: Om.
 
 module triangle_regs (
@@ -7,6 +6,8 @@ module triangle_regs (
   input  logic                                           rst_n,
 
   input  logic                                           load,
+  // All inputs are fixed-point Q10.6 (signed 16-bit) coordinates, except color.
+  // aka they are all [15:0] signed, with 6 fractional bits.
   input  logic signed [pkg_raster_params::COORD_WIDTH-1:0] v0_x_i,
   input  logic signed [pkg_raster_params::COORD_WIDTH-1:0] v0_y_i,
   input  logic signed [pkg_raster_params::COORD_WIDTH-1:0] v1_x_i,
@@ -24,22 +25,11 @@ module triangle_regs (
   output logic        [pkg_raster_params::COLOR_WIDTH-1:0] color
 );
 
-  // TODO(Om): always_ff registers — on rst_n low clear; on load capture inputs.
-  // TODO(Om): Decide whether vertices are integer pixels or already Q-format;
-  //           match docs/rules-sheet.md before Phase 1.
-  // TODO(Om): Hold values stable for the entire pixel scan (load only when !busy).
-
-  assign v0_x  = '0;
-  assign v0_y  = '0;
-  assign v1_x  = '0;
-  assign v1_y  = '0;
-  assign v2_x  = '0;
-  assign v2_y  = '0;
-  assign color = '0;
-
-  logic unused;
-  assign unused = clk ^ rst_n ^ load ^ color_i[0] ^
-                  v0_x_i[0] ^ v0_y_i[0] ^ v1_x_i[0] ^ v1_y_i[0] ^
-                  v2_x_i[0] ^ v2_y_i[0];
+  always_ff @(posedge clk, negedge rst_n)
+    if (~rst_n)
+      {v0_x, v0_y, v1_x, v1_y, v2_x, v2_y, color} <= '0;
+    else if (load)
+      {v0_x, v0_y, v1_x, v1_y, v2_x, v2_y, color} <=
+          {v0_x_i, v0_y_i, v1_x_i, v1_y_i, v2_x_i, v2_y_i, color_i};
 
 endmodule
