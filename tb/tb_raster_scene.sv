@@ -67,7 +67,7 @@ module tb_raster_scene;
   end
 
   initial begin
-    #200_000_000;
+    #2_000_000_000;
     $fatal(1, "tb_raster_scene: timeout");
   end
 

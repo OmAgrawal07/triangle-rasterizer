@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 2: multi-triangle scene elaborate / run (Icarus).
+# Phase 3: multi-triangle scene → RGB dump → PNG (128×128 robot).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -24,8 +24,13 @@ SOURCES=(
 echo "[run_scene] compiling with iverilog -g2012 ..."
 iverilog -g2012 -o "${OUT_DIR}/tb_raster_scene.vvp" "${SOURCES[@]}"
 
-echo "[run_scene] running ..."
+echo "[run_scene] running (128x128, 66 tris — may take a bit) ..."
 vvp "${OUT_DIR}/tb_raster_scene.vvp"
 
-echo "[run_scene] done."
-echo "[run_scene] After Om implements ROM+controller: dump scene.rgb and run dump_to_png.py"
+echo "[run_scene] converting dump -> PNG ..."
+python3 "${ROOT}/scripts/dump_to_png.py" \
+  "${OUT_DIR}/scene.rgb" \
+  "${OUT_DIR}/scene.png" \
+  --width 128 --height 128
+
+echo "[run_scene] done. Open sim/out/scene.png"
