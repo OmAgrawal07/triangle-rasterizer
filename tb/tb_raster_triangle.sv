@@ -6,6 +6,7 @@ module tb_raster_triangle;
   logic clk, rst_n, start, busy, done;
 
   logic                          tri_load;
+  logic                          do_clear;
   logic signed [COORD_WIDTH-1:0] v0_x, v0_y, v1_x, v1_y, v2_x, v2_y;
   logic        [COLOR_WIDTH-1:0] tri_color;
   logic [FB_ADDR_WIDTH-1:0]      fb_raddr;
@@ -25,6 +26,7 @@ module tb_raster_triangle;
     rst_n     = 1'b0;
     start     = 1'b0;
     tri_load  = 1'b0;
+    do_clear  = 1'b1;  // Phase 1: always clear then scan
     fb_raddr  = '0;
 
     repeat (4) @(posedge clk);

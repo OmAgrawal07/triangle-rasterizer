@@ -29,4 +29,8 @@ package pkg_raster_params;
   localparam logic signed [COORD_WIDTH-1:0] HALF_PIXEL =
       COORD_WIDTH'(1 <<< (FRAC_BITS - 1));
 
+  // Phase 2+: how many triangles in the scene ROM (Om may raise this)
+  localparam int NUM_TRIANGLES = 2;
+  localparam int TRI_IDX_WIDTH = $clog2(NUM_TRIANGLES);
+
 endpackage

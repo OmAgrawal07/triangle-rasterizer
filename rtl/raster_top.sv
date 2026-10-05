@@ -8,6 +8,9 @@ module raster_top (
   input  logic                                              rst_n,
 
   input  logic                                              start,
+  // Phase 2: pass-through to pixel_scanner (1 = clear before scan).
+  // Phase 1 TBs can leave this unconnected if defaulted — here required: drive 1'b1.
+  input  logic                                              do_clear,
   output logic                                              busy,
   output logic                                              done,
 
@@ -99,6 +102,7 @@ module raster_top (
     .clk(clk),
     .rst_n(rst_n),
     .start(start),
+    .do_clear(do_clear),
     .busy(busy),
     .done(done),
     .x(pix_x),

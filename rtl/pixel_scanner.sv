@@ -7,6 +7,9 @@ module pixel_scanner (
   input  logic                                              rst_n,
 
   input  logic                                              start,
+  // TODO(Om Phase 2): when 1, IDLE→CLEAR→SCAN; when 0, IDLE→SCAN (skip clear).
+  // For Phase 1 / default, tie this to 1'b1 so behavior stays clear-then-scan.
+  input  logic                                              do_clear,
   output logic                                              busy,
   output logic                                              done,
 
@@ -42,7 +45,13 @@ module pixel_scanner (
   state_e nextState;
   /* verilator lint_on UNUSEDSIGNAL */
 
-  // No real transitions in Phase 0 — stay idle so smoke TB only checks clk/rst.
+  // TODO(Om Phase 2): use do_clear in next-state from S_IDLE:
+  //   start && do_clear  → S_CLEAR
+  //   start && !do_clear → S_SCAN
+  // Until then Phase 1 keeps always going to S_CLEAR on start.
+
+  logic unused_do_clear;
+  assign unused_do_clear = do_clear;
 
   always_ff @(posedge clk, negedge rst_n)
     if (~rst_n) begin
