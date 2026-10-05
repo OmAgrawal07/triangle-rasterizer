@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Phase 1: one-triangle raster smoke with Icarus Verilog.
+# Phase 1: one-triangle raster + RGB dump + PNG.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT_DIR="${ROOT}/sim/out"
 mkdir -p "${OUT_DIR}"
+cd "${ROOT}"
 
 SOURCES=(
   "${ROOT}/rtl/pkg_raster_params.sv"
@@ -23,4 +24,10 @@ iverilog -g2012 -o "${OUT_DIR}/tb_raster_triangle.vvp" "${SOURCES[@]}"
 echo "[run_triangle] running ..."
 vvp "${OUT_DIR}/tb_raster_triangle.vvp"
 
-echo "[run_triangle] done."
+echo "[run_triangle] converting dump -> PNG ..."
+python3 "${ROOT}/scripts/dump_to_png.py" \
+  "${OUT_DIR}/frame.rgb" \
+  "${OUT_DIR}/triangle.png" \
+  --width 64 --height 64
+
+echo "[run_triangle] done. Open sim/out/triangle.png"
