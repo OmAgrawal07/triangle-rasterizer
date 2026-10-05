@@ -24,6 +24,8 @@ module pixel_scanner (
   output logic [pkg_raster_params::COLOR_WIDTH-1:0]         fb_wdata
 );
 
+  import pkg_raster_params::*;
+  
   typedef enum logic [2:0] {
     S_IDLE  = 3'd0,
     S_CLEAR = 3'd1,
@@ -36,7 +38,7 @@ module pixel_scanner (
   // Kept for Om's Phase 1 FSM — unused in Phase 0 stub body.
   /* verilator lint_off UNUSEDSIGNAL */
   state_e state;
-  state_e state_n;
+  state_e nextState;
   /* verilator lint_on UNUSEDSIGNAL */
 
   // TODO(Om): always_ff state register with reset → S_IDLE.
@@ -46,20 +48,52 @@ module pixel_scanner (
   // TODO(Om): Pulse done for one cycle; hold busy while not idle.
   // No real transitions in Phase 0 — stay idle so smoke TB only checks clk/rst.
 
-  assign state   = S_IDLE;
-  assign state_n = S_IDLE;
+  always_ff @(posedge clk, negedge rst_n)
+    if (~rst_n) begin
+      state <= S_IDLE;
+      x <= '0;
+      y <= '0;
+      clear_addr <= '0;
+    end
+    else begin
+      state <= nextState;
+      if (state == S_IDLE) begin
+        x <= '0;
+        y <= '0;
+        clear_addr <= '0;
+      end
+      else if (state == S_CLEAR)
+        clear_addr <= clear_addr + 1;
+      else if (state == S_SCAN) begin
+        if (x < WIDTH-1)
+          x <= x + 1;
+        else begin
+          x <= '0;
+          y <= y + 1;
+        end
+      end
+    end
 
-  assign busy       = 1'b0;
-  assign done       = 1'b0;
-  assign x          = '0;
-  assign y          = '0;
-  assign clear_en   = 1'b0;
-  assign clear_addr = '0;
-  assign fb_we      = 1'b0;
-  assign fb_waddr   = '0;
-  assign fb_wdata   = '0;
+  assign done = (state == S_DONE);
 
-  logic unused;
-  assign unused = clk ^ rst_n ^ start ^ is_inside ^ tri_color[0];
+  logic scan_done;
+  assign scan_done = (x == WIDTH-1) && (y == HEIGHT-1);
+
+  always_comb begin
+    unique case (state)
+      S_IDLE: nextState = start ? S_CLEAR : S_IDLE;
+      S_CLEAR: nextState = (clear_addr == FB_DEPTH-1) ? S_SCAN : S_CLEAR;
+      S_SCAN: nextState = (scan_done) ? S_DONE : S_SCAN;
+      S_DONE: nextState = S_IDLE;
+      default: nextState = S_IDLE;
+    endcase
+  end
+
+  // Outputs only assigned here
+  assign busy       = (state != S_IDLE);
+  assign clear_en   = (state == S_CLEAR);
+  assign fb_we      = (state == S_SCAN) && is_inside;
+  assign fb_waddr   = y * WIDTH + x;
+  assign fb_wdata   = tri_color;
 
 endmodule
