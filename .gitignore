@@ -1,4 +1,6 @@
 sim/out/
+cuda/out/
+cuda/bin/
 *.vvp
 *.vcd
 *.fst
