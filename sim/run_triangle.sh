@@ -28,6 +28,6 @@ echo "[run_triangle] converting dump -> PNG ..."
 python3 "${ROOT}/scripts/dump_to_png.py" \
   "${OUT_DIR}/frame.rgb" \
   "${OUT_DIR}/triangle.png" \
-  --width 64 --height 64
+  --width 128 --height 128
 
 echo "[run_triangle] done. Open sim/out/triangle.png"
